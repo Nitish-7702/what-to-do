@@ -1,6 +1,7 @@
 import { Outlet, Link } from "react-router-dom";
-import { LayoutDashboard, Settings, User } from "lucide-react";
+import { LayoutDashboard, Settings, User, History, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { UserButton } from "@clerk/clerk-react";
 
 export default function Layout() {
   return (
@@ -12,9 +13,17 @@ export default function Layout() {
         </div>
         <nav className="flex-1 px-4 space-y-2">
           <NavItem to="/" icon={<LayoutDashboard size={20} />} label="Dashboard" />
+          <NavItem to="/onboarding" icon={<CheckCircle size={20} />} label="Onboarding" />
+          <NavItem to="/history" icon={<History size={20} />} label="History" />
           <NavItem to="/users" icon={<User size={20} />} label="Users" />
           <NavItem to="/settings" icon={<Settings size={20} />} label="Settings" />
         </nav>
+        <div className="p-4 border-t">
+          <div className="flex items-center gap-3">
+             <UserButton afterSignOutUrl="/sign-in" />
+             <span className="text-sm font-medium">Account</span>
+          </div>
+        </div>
       </aside>
 
       {/* Main Content */}
