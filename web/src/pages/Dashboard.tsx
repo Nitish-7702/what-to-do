@@ -6,9 +6,7 @@ import { FocusTimer } from '@/components/FocusTimer';
 import { GoalEditor } from '@/components/GoalEditor';
 import { ConstraintPicker } from '@/components/ConstraintPicker';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet'; // Need to create Sheet or use Dialog. I'll use Dialog for now or basic sidebar. 
-// Actually, I didn't create Sheet. I'll use a simple collapsible or Dialog.
-// Let's use a simple side panel implementation or just put them on the page.
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '../components/ui/sheet';
 import { Settings, RefreshCw, Loader2, History as HistoryIcon } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Link } from 'react-router-dom';
