@@ -1,13 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge'; // Wait, I didn't create Badge. I should create it or use standard HTML. I'll create Badge.
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
+import { Badge } from './ui/badge';
+import { Button } from './ui/button';
 import { CheckCircle2, Clock, Zap, Target, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-// I'll create a simple Badge component inline or separately. Let's create it separately for reusability.
-// But for now, I'll assume it exists or use a simple span. I'll create src/components/ui/badge.tsx first.
 
 export interface Action {
   id: string;
@@ -60,14 +57,14 @@ export const ActionCard: React.FC<ActionCardProps> = ({ action, onComplete, clas
               </CardDescription>
             </div>
             <div className="flex flex-col items-end gap-2">
-              <div className="flex items-center gap-1 text-sm font-medium text-muted-foreground bg-secondary px-3 py-1 rounded-full">
+              <Badge variant="secondary" className="flex items-center gap-1 text-sm font-medium px-3 py-1">
                 <Clock className="w-4 h-4" />
                 {action.time_minutes} min
-              </div>
-              <div className="flex items-center gap-1 text-sm font-medium text-muted-foreground bg-secondary px-3 py-1 rounded-full">
+              </Badge>
+              <Badge variant="secondary" className="flex items-center gap-1 text-sm font-medium px-3 py-1">
                 <Zap className="w-4 h-4 text-yellow-500" />
                 Level {action.difficulty}
-              </div>
+              </Badge>
             </div>
           </div>
         </CardHeader>
