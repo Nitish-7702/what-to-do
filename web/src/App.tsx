@@ -3,6 +3,7 @@ import { ClerkProvider, useAuth } from '@clerk/clerk-react';
 import Layout from '@/components/Layout';
 import SignInPage from '@/pages/SignInPage';
 import SignUpPage from '@/pages/SignUpPage';
+import Billing from '@/pages/Billing';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useEffect, useState } from 'react';
 
@@ -108,6 +109,7 @@ function ClerkProviderWithRoutes() {
           <Route path="onboarding" element={<Onboarding />} />
           <Route path="history" element={<History />} />
           <Route path="users" element={<Users />} />
+          <Route path="billing" element={<Billing />} />
           <Route path="settings" element={<div>Settings Page</div>} />
         </Route>
       </Routes>
