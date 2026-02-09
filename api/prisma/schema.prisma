@@ -115,8 +115,10 @@ model Entitlement {
   userId    String            @unique
   plan      Plan
   status    EntitlementStatus
-  periodEnd DateTime?
-  createdAt DateTime          @default(now())
+  periodEnd        DateTime?
+  usageCount       Int               @default(0)
+  lastUsageDate    DateTime?
+  createdAt        DateTime          @default(now())
   updatedAt DateTime          @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
