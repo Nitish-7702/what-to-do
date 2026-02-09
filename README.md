@@ -37,97 +37,130 @@
     [ Clerk ]                     +----> [ Stripe ] (Payments & Subs)
 ```
 
-## 🚀 Local Setup
+## 🚀 Getting Started (Manual Setup)
 
-### Option 1: Docker (Recommended)
-Prerequisites: Docker Desktop installed.
+Follow these steps to get the project running on your local machine.
 
-1.  Clone the repository.
-2.  Create a `.env` file in the root directory (see **Environment Variables** below).
-3.  Run the application:
-    ```bash
-    docker-compose up --build
-    ```
-4.  Access the app:
-    - Web: `http://localhost`
-    - API: `http://localhost:4000`
+### 1. Prerequisites
+- **Node.js** (v18 or higher)
+- **npm** (v9 or higher)
+- **PostgreSQL Database** (Local or Remote like Neon.tech)
 
-### Option 2: Manual Setup
-Prerequisites: Node.js 18+, PostgreSQL.
+### 2. Installation
+This project is set up as a monorepo using npm workspaces. You can install dependencies for both the API and Web client from the root directory.
 
-1.  **Database Setup:**
-    - Ensure a Postgres instance is running.
-    - Update `DATABASE_URL` in `api/.env`.
+```bash
+# Clone the repository
+git clone https://github.com/Nitish-7702/what-to-do.git
+cd what-to-do
 
-2.  **API Setup:**
-    ```bash
-    cd api
-    npm install
-    npx prisma migrate dev
-    npm run dev
-    ```
+# Install all dependencies (root, api, and web)
+npm install
+```
 
-3.  **Web Setup:**
-    ```bash
-    cd web
-    npm install
-    npm run dev
-    ```
+### 3. Environment Configuration
+You need to set up environment variables for both the API and the Web client.
 
-## 🔑 Environment Variables
-
-Create a `.env` file in the project root (for Docker) or separate `.env` files in `api/` and `web/`.
-
+**API Configuration (`api/.env`)**
+Create a file named `.env` in the `api` directory:
 ```env
-# Shared / API
-PORT=4000
-DATABASE_URL="postgresql://user:pass@host:5432/db?sslmode=require"
+PORT=3001
+DATABASE_URL="postgresql://user:password@host:5432/dbname?sslmode=require"
 CLERK_PUBLISHABLE_KEY=pk_test_...
 CLERK_SECRET_KEY=sk_test_...
 OPENAI_API_KEY=sk-...
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 STRIPE_PRICE_ID=price_...
-CLIENT_URL=http://localhost:5173  # or http://localhost for Docker
-
-# Web (if running manually, create web/.env)
-VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
-VITE_API_URL=http://localhost:4000
+CLIENT_URL=http://localhost:3000
 ```
+
+**Web Configuration (`web/.env`)**
+Create a file named `.env` in the `web` directory:
+```env
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
+VITE_API_URL=http://localhost:3001
+VITE_CLERK_SIGN_IN_URL=/sign-in
+VITE_CLERK_SIGN_UP_URL=/sign-up
+VITE_CLERK_AFTER_SIGN_IN_URL=/
+VITE_CLERK_AFTER_SIGN_UP_URL=/
+```
+
+### 4. Database Setup
+Initialize the Prisma client and push the schema to your database.
+
+```bash
+cd api
+
+# Generate Prisma Client
+npx prisma generate
+
+# Run Migrations (creates tables in your DB)
+npx prisma migrate dev --name init
+
+# (Optional) Seed the database if a seed script exists
+# npx prisma db seed
+
+cd ..
+```
+
+### 5. Running the Application
+You can run both the API and Web client simultaneously from the root directory.
+
+```bash
+# Run both services
+npm run dev
+```
+
+Alternatively, run them in separate terminals:
+
+**Terminal 1 (API):**
+```bash
+cd api
+npm run dev
+# Server starts on http://localhost:3001
+```
+
+**Terminal 2 (Web):**
+```bash
+cd web
+npm run dev
+# Client starts on http://localhost:3000
+```
+
+## 🐳 Docker Setup (Optional)
+
+If you prefer using Docker, ensure Docker Desktop is installed.
+
+1.  Create the `.env` files as described above (or a combined root `.env` if using the docker-compose config).
+2.  Run the stack:
+    ```bash
+    docker-compose up --build
+    ```
+3.  Access the app:
+    - Web: `http://localhost:3000`
+    - API: `http://localhost:3001`
 
 ## 📦 Deployment Guide
 
-### 1. Database (Neon)
-- Create a project on [Neon.tech](https://neon.tech).
-- Get the connection string (`DATABASE_URL`).
+### Database (Neon)
+1.  Create a project on [Neon.tech](https://neon.tech).
+2.  Get the connection string and use it as `DATABASE_URL`.
 
-### 2. API (Fly.io or Railway)
-- **Railway:** Connect GitHub repo -> Select `/api` root -> Add variables.
-- **Fly.io:** Run `fly launch` inside `/api`.
-- **Important:** Run `npx prisma migrate deploy` during the build process (handled in Dockerfile).
+### API (Railway/Fly.io)
+1.  Connect your GitHub repo.
+2.  Set the Root Directory to `api` (or configure build command to build `api`).
+3.  Add all variables from `api/.env` to the deployment platform's environment variables.
+4.  Update `CLIENT_URL` to your production frontend URL.
 
-### 3. Frontend (Vercel)
-- Connect GitHub repo.
-- Set Root Directory to `web`.
-- Add Environment Variable: `VITE_API_URL` (Your production API URL).
-- Deploy!
-
-## 💳 Stripe Testing
-
-This project uses Stripe for managing "Pro" subscriptions.
-1.  Use the **Stripe CLI** to forward webhooks locally:
-    ```bash
-    stripe listen --forward-to localhost:4000/stripe/webhook
-    ```
-2.  Use the test card numbers provided by Stripe (e.g., `4242 4242 4242 4242`) in the checkout flow.
-3.  Check the "Billing" page to see your status update to **Pro** instantly after payment.
+### Web (Vercel)
+1.  Import the repo into Vercel.
+2.  Set the Root Directory to `web`.
+3.  Add all variables from `web/.env` to Vercel environment variables.
+4.  Update `VITE_API_URL` to your production API URL.
 
 ## 📸 Screenshots
-
-| Landing Page | Dashboard |
-|:---:|:---:|
-| ![Landing Page Placeholder](https://via.placeholder.com/400x250?text=Landing+Page) | ![Dashboard Placeholder](https://via.placeholder.com/400x250?text=Dashboard) |
-
-| Focus Timer | Billing & Plans |
-|:---:|:---:|
-| ![Timer Placeholder](https://via.placeholder.com/400x250?text=Focus+Timer) | ![Billing Placeholder](https://via.placeholder.com/400x250?text=Billing) |
+*(Placeholders for future screenshots)*
+- **Dashboard:** Overview of your current focus.
+- **Onboarding:** Setting up your profile and goals.
+- **Focus Mode:** The distraction-free timer interface.
