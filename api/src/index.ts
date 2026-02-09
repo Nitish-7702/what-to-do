@@ -6,11 +6,16 @@ import { authMiddleware, requireAuthMiddleware } from './middleware/auth';
 import { clerkClient } from '@clerk/express';
 import { actionRoutes } from './routes/action.routes';
 import { billingRoutes } from './routes/billing.routes';
+import { stripeRoutes } from './routes/stripe.routes';
 
 const app = express();
 
 // Middleware
 app.use(cors());
+
+// Stripe webhook must be registered before express.json() to consume raw body
+app.use('/stripe', stripeRoutes);
+
 app.use(express.json());
 app.use(authMiddleware);
 
