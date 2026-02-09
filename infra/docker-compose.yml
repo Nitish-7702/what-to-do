@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: pern_postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+      POSTGRES_DB: ${DB_NAME:-pern_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  # Optional Redis
+  # redis:
+  #   image: redis:alpine
+  #   ports:
+  #     - "6379:6379"
+
+volumes:
+  postgres_data:
