@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { api, setAuthToken } from '@/lib/api';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, CheckCircle, Zap } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Loader2, CheckCircle, Zap, Shield } from 'lucide-react';
 
 interface BillingStatus {
   plan: 'FREE' | 'PRO';
@@ -24,12 +27,9 @@ export default function Billing() {
   const fetchStatus = async () => {
     try {
       const token = await getToken();
-      const res = await fetch('http://localhost:3001/billing/status', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        setStatus(await res.json());
-      }
+      setAuthToken(token);
+      const res = await api.get('/billing/status');
+      setStatus(res.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -41,12 +41,9 @@ export default function Billing() {
     setActionLoading(true);
     try {
       const token = await getToken();
-      const res = await fetch('http://localhost:3001/billing/create-checkout-session', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
+      setAuthToken(token);
+      const res = await api.post('/billing/create-checkout-session');
+      if (res.data.url) window.location.href = res.data.url;
     } catch (err) {
       console.error(err);
     } finally {
@@ -58,12 +55,9 @@ export default function Billing() {
     setActionLoading(true);
     try {
       const token = await getToken();
-      const res = await fetch('http://localhost:3001/billing/create-portal-session', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
+      setAuthToken(token);
+      const res = await api.post('/billing/create-portal-session');
+      if (res.data.url) window.location.href = res.data.url;
     } catch (err) {
       console.error(err);
     } finally {
@@ -71,72 +65,96 @@ export default function Billing() {
     }
   };
 
-  if (loading) return <div className="flex justify-center p-8"><Loader2 className="animate-spin" /></div>;
+  if (loading) return <div className="flex justify-center items-center min-h-[50vh]"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
+
+  const isPro = status?.plan === 'PRO';
+  const usagePercentage = status ? Math.min(100, (status.usageCount / status.limit) * 100) : 0;
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-8">
-      <h1 className="text-3xl font-bold">Billing & Usage</h1>
+    <div className="max-w-5xl mx-auto p-6 space-y-8">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Billing & Usage</h1>
+        <p className="text-muted-foreground">Manage your subscription and track your usage.</p>
+      </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-2 gap-8">
         {/* Usage Card */}
-        <Card>
+        <Card className="border-2 border-primary/10">
           <CardHeader>
-            <CardTitle>Daily Usage</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="w-5 h-5 text-yellow-500" />
+              Daily Usage
+            </CardTitle>
+            <CardDescription>
+              {isPro ? 'You have unlimited access.' : 'Refreshes every day at midnight.'}
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-4xl font-bold">
-              {status?.usageCount} <span className="text-lg text-gray-500 font-normal">/ {status?.limit} actions</span>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <div className="flex justify-between items-end">
+                <span className="text-4xl font-bold tabular-nums">
+                  {status?.usageCount}
+                </span>
+                <span className="text-muted-foreground pb-1">
+                   / {isPro ? '∞' : status?.limit} actions
+                </span>
+              </div>
+              <Progress value={isPro ? 100 : usagePercentage} className="h-3" />
             </div>
-            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-blue-600" 
-                style={{ width: `${Math.min(100, ((status?.usageCount || 0) / (status?.limit || 1)) * 100)}%` }}
-              />
+            
+            <div className="p-4 bg-secondary/50 rounded-lg text-sm">
+              <div className="flex items-center gap-2 font-medium mb-1">
+                <Shield className="w-4 h-4 text-primary" />
+                Current Plan: <Badge variant={isPro ? "default" : "secondary"}>{status?.plan}</Badge>
+              </div>
+              <p className="text-muted-foreground">
+                {isPro 
+                  ? "Thank you for supporting us! You're on the Pro plan." 
+                  : "You're on the Free plan. Upgrade to unlock unlimited actions."}
+              </p>
             </div>
-            <p className="text-sm text-gray-500">
-              {status?.plan === 'FREE' 
-                ? 'Upgrade to Pro for unlimited actions.' 
-                : 'You have unlimited access!'}
-            </p>
           </CardContent>
         </Card>
 
-        {/* Plan Card */}
-        <Card className={status?.plan === 'PRO' ? 'border-blue-500 border-2' : ''}>
+        {/* Upgrade / Manage Card */}
+        <Card className={`border-2 ${isPro ? 'border-border' : 'border-primary shadow-lg shadow-primary/10'}`}>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {status?.plan === 'PRO' ? <Zap className="text-yellow-500" /> : null}
-              Current Plan: {status?.plan}
-            </CardTitle>
+            <CardTitle>{isPro ? 'Manage Subscription' : 'Upgrade to Pro'}</CardTitle>
+            <CardDescription>
+              {isPro ? 'Update payment method or cancel subscription.' : 'Get unlimited actions and priority support.'}
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <ul className="space-y-2">
-              <li className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                {status?.plan === 'PRO' ? 'Unlimited Next Actions' : '5 Next Actions per day'}
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                Next Action Engine
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                History & Feedback
-              </li>
-            </ul>
-
-            {status?.plan === 'FREE' ? (
-              <Button onClick={handleUpgrade} disabled={actionLoading} className="w-full">
-                {actionLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Upgrade to Pro
-              </Button>
-            ) : (
-              <Button onClick={handlePortal} variant="outline" disabled={actionLoading} className="w-full">
+          <CardContent className="space-y-4">
+            {!isPro && (
+              <ul className="space-y-3 text-sm">
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  Unlimited Next Actions
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  Priority AI Processing
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  Early Access to New Features
+                </li>
+              </ul>
+            )}
+          </CardContent>
+          <CardFooter>
+            {isPro ? (
+              <Button onClick={handlePortal} disabled={actionLoading} variant="outline" className="w-full">
                 {actionLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Manage Subscription
               </Button>
+            ) : (
+              <Button onClick={handleUpgrade} disabled={actionLoading} className="w-full bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white shadow-md">
+                {actionLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Upgrade to Pro - $10/mo
+              </Button>
             )}
-          </CardContent>
+          </CardFooter>
         </Card>
       </div>
     </div>
