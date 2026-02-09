@@ -4,6 +4,7 @@ import { env } from './config/env';
 import { prisma } from './lib/prisma';
 import { authMiddleware, requireAuthMiddleware } from './middleware/auth';
 import { clerkClient } from '@clerk/express';
+import { actionRoutes } from './routes/action.routes';
 
 const app = express();
 
@@ -13,6 +14,8 @@ app.use(express.json());
 app.use(authMiddleware);
 
 // Routes
+app.use(actionRoutes);
+
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
